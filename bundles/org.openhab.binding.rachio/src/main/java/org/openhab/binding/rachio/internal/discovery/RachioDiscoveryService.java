@@ -141,10 +141,10 @@ public class RachioDiscoveryService extends AbstractDiscoveryService implements 
                 // register thing if it not already exists
                 ThingUID devThingUID = new ThingUID(THING_TYPE_DEVICE, bridgeUID, dev.getThingID());
                 dev.setUID(bridgeUID, devThingUID);
-                logger.info(" Rachio device discovered: '{}' (id {}), S/N={}, MAC={}", dev.name, dev.id,
+                logger.debug(" Rachio device discovered: '{}' (id {}), S/N={}, MAC={}", dev.name, dev.id,
                         dev.serialNumber, dev.macAddress);
                 logger.debug("  latitude={}, longitude={}", dev.latitude, dev.longitude);
-                logger.info("   device status={}, paused/sleep={}, on={}", dev.status, dev.getSleepMode(),
+                logger.debug("   device status={}, paused/sleep={}, on={}", dev.status, dev.getSleepMode(),
                         dev.getEnabled());
                 Map<String, Object> properties = new HashMap<>(dev.fillProperties());
                 DiscoveryResult discoveryResult = DiscoveryResultBuilder.create(devThingUID).withProperties(properties)
@@ -160,7 +160,7 @@ public class RachioDiscoveryService extends AbstractDiscoveryService implements 
                     // register thing if it not already exists
                     ThingUID zoneThingUID = new ThingUID(THING_TYPE_ZONE, bridgeUID, zone.getThingID());
                     zone.setUID(devThingUID, zoneThingUID);
-                    logger.info("Zone#{} '{}' (id={}) added, enabled={}", zone.zoneNumber, zone.name, zone.id,
+                    logger.debug("Zone#{} '{}' (id={}) added, enabled={}", zone.zoneNumber, zone.name, zone.id,
                             zone.getEnabled());
 
                     if (zone.getEnabled() == OnOffType.ON) {
@@ -171,11 +171,11 @@ public class RachioDiscoveryService extends AbstractDiscoveryService implements 
                                 .withLabel(dev.name + "[" + zone.zoneNumber + "]: " + zone.name).build();
                         thingDiscovered(zoneDiscoveryResult);
                     } else {
-                        logger.info("Zone#{} '{}' is disabled, skip thing creation", zone.name, zone.id);
+                        logger.debug("Zone#{} '{}' is disabled, skip thing creation", zone.name, zone.id);
                     }
                 }
             }
-            logger.info("{}  Rachio device initialized.", deviceList.size());
+            logger.debug("{}  Rachio device initialized.", deviceList.size());
 
             stopScan();
         } catch (RuntimeException e) {
