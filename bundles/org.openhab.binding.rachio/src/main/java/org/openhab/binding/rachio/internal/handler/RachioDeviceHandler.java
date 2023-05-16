@@ -15,6 +15,7 @@ package org.openhab.binding.rachio.internal.handler;
 import static org.openhab.binding.rachio.internal.RachioBindingConstants.*;
 import static org.openhab.binding.rachio.internal.RachioUtils.getTimestamp;
 
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -210,10 +211,12 @@ public class RachioDeviceHandler extends BaseThingHandler implements RachioStatu
             updateChannel(RachioBindingConstants.CHANNEL_DEVICE_ACTIVE, d.getEnabled());
             updateChannel(RachioBindingConstants.CHANNEL_DEVICE_PAUSED, d.getSleepMode());
             updateChannel(RachioBindingConstants.CHANNEL_DEVICE_RUN_ZONES, new StringType(d.getRunZones()));
-            updateChannel(RachioBindingConstants.CHANNEL_DEVICE_RUN_TIME, new DecimalType(d.getRunTime()));
+            updateChannel(RachioBindingConstants.CHANNEL_DEVICE_RUN_TIME,
+                    new DecimalType(new BigDecimal(d.getRunTime())));
             updateChannel(RachioBindingConstants.CHANNEL_DEVICE_RAIN_DELAY,
                     d.rainSensorTripped ? OnOffType.ON : OnOffType.OFF);
-            updateChannel(RachioBindingConstants.CHANNEL_DEVICE_RAIN_STRIPPED, new DecimalType(d.rainDelay));
+            updateChannel(RachioBindingConstants.CHANNEL_DEVICE_RAIN_STRIPPED,
+                    new DecimalType(new BigDecimal(d.rainDelay)));
             updateChannel(RachioBindingConstants.CHANNEL_LAST_EVENT, new StringType(d.getEvent()));
             DateTimeType ts = d.getEventTime();
             updateChannel(RachioBindingConstants.CHANNEL_LAST_EVENTTS, ts != null ? ts : UnDefType.UNDEF);
