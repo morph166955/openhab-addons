@@ -212,11 +212,11 @@ public class RachioDeviceHandler extends BaseThingHandler implements RachioStatu
             updateChannel(RachioBindingConstants.CHANNEL_DEVICE_PAUSED, d.getSleepMode());
             updateChannel(RachioBindingConstants.CHANNEL_DEVICE_RUN_ZONES, new StringType(d.getRunZones()));
             updateChannel(RachioBindingConstants.CHANNEL_DEVICE_RUN_TIME,
-                    new DecimalType(new BigDecimal(d.getRunTime())));
+                    new DecimalType(new BigDecimal(d.getRunTime()).toString()));
             updateChannel(RachioBindingConstants.CHANNEL_DEVICE_RAIN_DELAY,
                     d.rainSensorTripped ? OnOffType.ON : OnOffType.OFF);
             updateChannel(RachioBindingConstants.CHANNEL_DEVICE_RAIN_STRIPPED,
-                    new DecimalType(new BigDecimal(d.rainDelay)));
+                    new DecimalType(new BigDecimal(d.rainDelay).toString()));
             updateChannel(RachioBindingConstants.CHANNEL_LAST_EVENT, new StringType(d.getEvent()));
             DateTimeType ts = d.getEventTime();
             updateChannel(RachioBindingConstants.CHANNEL_LAST_EVENTTS, ts != null ? ts : UnDefType.UNDEF);

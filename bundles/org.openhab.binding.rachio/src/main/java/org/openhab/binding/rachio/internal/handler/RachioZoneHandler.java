@@ -246,11 +246,11 @@ public class RachioZoneHandler extends BaseThingHandler implements RachioStatusL
         RachioZone z = zone;
         if (z != null) {
             updateChannel(CHANNEL_ZONE_NAME, new StringType(z.name));
-            updateChannel(CHANNEL_ZONE_NUMBER, new DecimalType(new BigDecimal(z.zoneNumber)));
+            updateChannel(CHANNEL_ZONE_NUMBER, new DecimalType(new BigDecimal(z.zoneNumber).toString()));
             updateChannel(CHANNEL_ZONE_ENABLED, z.getEnabled());
             updateChannel(CHANNEL_ZONE_RUN, OnOffType.OFF);
-            updateChannel(CHANNEL_ZONE_RUN_TIME, new DecimalType(new BigDecimal(z.getStartRunTime())));
-            updateChannel(CHANNEL_ZONE_RUN_TOTAL, new DecimalType(new BigDecimal(z.runtime)));
+            updateChannel(CHANNEL_ZONE_RUN_TIME, new DecimalType(new BigDecimal(z.getStartRunTime()).toString()));
+            updateChannel(CHANNEL_ZONE_RUN_TOTAL, new DecimalType(new BigDecimal(z.runtime).toString()));
             updateChannel(CHANNEL_ZONE_IMAGEURL, new StringType(z.imageUrl));
             updateChannel(CHANNEL_LAST_EVENT, new StringType(z.getEvent()));
             DateTimeType ts = z.getEventTime();
