@@ -1,6 +1,6 @@
 # OpenWebNet (BTicino/Legrand) Binding
 
-This binding integrates BTicino / Legrand MyHOME&reg; BUS and Zigbee wireless (MyHOME_Play&reg;) devices using the [OpenWebNet](https://en.wikipedia.org/wiki/OpenWebNet) protocol.
+This binding integrates BTicino / Legrand MyHOME&reg; BUS and Zigbee wireless (MyHOME_Radio&reg;) devices using the [OpenWebNet](https://en.wikipedia.org/wiki/OpenWebNet) protocol.
 
 The binding supports:
 
@@ -22,14 +22,16 @@ These gateways have been tested with the binding:
 [F454](https://catalogue.bticino.com/BTI-F454-EN),
 [MyHOMEServer1](https://catalogue.bticino.com/BTI-MYHOMESERVER1-EN),
 [MyHOME_Screen10 (MH4893C)](https://catalogue.bticino.com/BTI-MH4893C-EN),
-[MyHOME_Screen3,5 (LN4890)](https://catalogue.bticino.com/BTI-LN4890-EN),
+[MyHOME_Screen3,5 (LN4890)](https://www.homesystems-legrandgroup.com/home/-/productsheets/2452536),
 [MH201](https://catalogue.bticino.com/BTI-MH201-EN),
 [MH202](https://catalogue.bticino.com/BTI-MH202-EN),
-[F455](https://www.homesystems-legrandgroup.com/home?p_p_id=it_smc_bticino_homesystems_search_AutocompletesearchPortlet&p_p_lifecycle=0&p_p_state=normal&p_p_mode=view&_it_smc_bticino_homesystems_search_AutocompletesearchPortlet_journalArticleId=2481871&_it_smc_bticino_homesystems_search_AutocompletesearchPortlet_mvcPath=%2Fview_journal_article_content.jsp),
-[MH200N](https://www.homesystems-legrandgroup.com/home?p_p_id=it_smc_bticino_homesystems_search_AutocompletesearchPortlet&p_p_lifecycle=0&p_p_state=normal&p_p_mode=view&_it_smc_bticino_homesystems_search_AutocompletesearchPortlet_journalArticleId=2469209&_it_smc_bticino_homesystems_search_AutocompletesearchPortlet_mvcPath=%2Fview_journal_article_content.jsp),
-[F453](https://www.homesystems-legrandgroup.com/home?p_p_id=it_smc_bticino_homesystems_search_AutocompletesearchPortlet&p_p_lifecycle=0&p_p_state=normal&p_p_mode=view&_it_smc_bticino_homesystems_search_AutocompletesearchPortlet_journalArticleId=2703566&_it_smc_bticino_homesystems_search_AutocompletesearchPortlet_mvcPath=%2Fview_journal_article_content.jsp),  etc.
+[F455](https://www.homesystems-legrandgroup.com/home/-/productsheets/2481871),
+[MH200N](https://www.homesystems-legrandgroup.com/home/-/productsheets/2469209),
+[F453](https://www.homesystems-legrandgroup.com/home/-/productsheets/2703566),  etc.
 
-- **Zigbee USB Gateways**, such as [BTicino 3578](https://catalogo.bticino.it/BTI-3578-IT), also known as Legrand 088328
+- **Zigbee USB Gateways**, such as [BTicino 3578](https://www.legrand.be/fr/catalogue/zigbee-interface-openzigbee-3578), also known as *Legrand 088328*
+
+Some of these modules are not on the BTicino catalogue anymore.
 
 **NOTE** The new BTicino Living Now&reg; and Livinglight Smart&reg; wireless systems are not supported by this binding as they do not use the OpenWebNet protocol.
 
@@ -88,7 +90,7 @@ sudo usermod -a -G dialout openhab
 ```
 
 - The user will need to logout and login to see the new group added. If you added your user to this group and still cannot get permission, reboot Linux to ensure the new group permission is attached to the `openhab` user.
-- Once the Zigbee USB Gateway is added and online, a second Inbox Scan will discover devices connected to it. Because of the Zigbee radio network, device discovery will take ~40-60 sec. Be patient!
+- Once the Zigbee USB Gateway is added and online, a second Inbox scan will discover devices connected to it. Because of the Zigbee radio network, device discovery will take ~40-60 sec. Be patient!
 - Wireless devices must be part of the same Zigbee network of the Zigbee USB Gateway to discover them. Please refer to [this video by BTicino](https://www.youtube.com/watch?v=CoIgg_Xqhbo) to setup a Zigbee wireless network which includes the Zigbee USB Gateway
 - Only powered wireless devices part of the same Zigbee network and within radio coverage of the Zigbee USB Gateway will be discovered. Unreachable or not powered devices will be discovered as _GENERIC_ devices and cannot be controlled
 - Wireless control units cannot be discovered by the Zigbee USB Gateway and therefore are not supported
@@ -107,6 +109,7 @@ Configuration parameters are:
   - if the BUS/SCS gateway is configured to accept connections from the openHAB computer IP address, no password should be required
   - in all other cases, a password must be configured. This includes gateways that have been discovered and added from Inbox: without a password configured they will remain OFFLINE
 - `discoveryByActivation`: discover BUS devices when they are activated also when a device scan hasn't been started from Inbox (`boolean`, _optional_, default: `false`). See [Discovery by Activation](#discovery-by-activation).
+- `dateTimeSynch`: synchronise date and time of slave elements on the SCS BUS using openHAB timestamp (`boolean`, _optional_, default: `false`). Set this parameter to `true` to send time-date synchronisation commands on the BUS when the timestamp received from the gateway differs by more than 1 minute from that of openHAB. Useful if the BUS gateway is not syncronized with Internet time servers and with daylight saving time changes.
 
 Alternatively the BUS/SCS Gateway thing can be configured using the `.things` file, see `openwebnet.things` example [below](#full-example).
 
@@ -136,6 +139,7 @@ For any manually added device, you must configure:
     - dry Contact or IR Interface `99`: add `3` before --> `where="399"`
     - energy meter F520/F521 numbered `1`: add `5` before  --> `where="51"`
     - energy meter F522/F523 numbered `4`: add `7` before and `#0` after --> `where="74#0"`
+    - energy meter F520/F521 the `energyRefreshPeriod` configuration parameter sets the number of minutes (the minimum value is 30, the maximum value is 1440) between refreshes for energy totalizers (default: 30 minutes) --> `energyRefreshPeriod` = 35  
     - alarm zone `2` --> `where="2"`
   - example for Zigbee devices: `where=765432101#9`. The ID of the device (ADDR part) is usually written in hexadecimal on the device itself, for example `ID 0074CBB1`: convert to decimal (`7654321`) and add `01#9` at the end to obtain `where=765432101#9`. For 2-unit switch devices (`zb_on_off_switch2u`), last part should be `00#9`.
 
@@ -147,7 +151,7 @@ Thermo zones can be configured defining a `bus_thermo_zone` Thing for each zone 
 
 - the `where` configuration parameter (`OpenWebNet Address`):
   - example BUS/SCS zone `1` --> `where="1"`
-- the `standAlone` configuration parameter (`boolean`, default: `true`): identifies if the zone is managed or not by a Central Unit (4 or 99 zones). `standAlone=true` means no Central Unit is present in the system.
+- the `standAlone` configuration parameter (`boolean`, default: `true`): identifies if the zone is managed or not by a Central Unit (4- or 99-zones). `standAlone=true` means the zone is indipendent and no Central Unit is present in the system.
 
 Temperature sensors can be configured defining a `bus_thermo_sensor` Thing with the following parameters:
 
@@ -155,19 +159,18 @@ Temperature sensors can be configured defining a `bus_thermo_sensor` Thing with 
   - example sensor `5` of external zone `00` --> `where="500"`
   - example: slave sensor `3` of zone `2` --> `where="302"`
 
-The (optional) Central Unit can be configured defining a `bus_themo_cu` Thing with the `where` configuration parameter (`OpenWebNet Address`) set to `where="0"`.
+The (optional) Central Unit can be configured defining a `bus_themo_cu` Thing with the `where` configuration parameter (`OpenWebNet Address`) set to `where="#0"` for a 99-zone Central Unit or `where="#0#1"` for a 4-zone Central Unit configured as zone 1.
 
 ##### Thermo Central Unit integration missing points
 
 - Read setPoint temperature and current mode
-- Holiday activation command (all zones)
-- Discovery
+- Holiday/Vacation activation command
 
 #### Configuring Alarm and Auxiliary (AUX)
 
 **NOTE 1** Receiving AUX messages originating from the BUS is not supported yet, only sending messages to the BUS is supported
 
-**NOTE 2** Alarm messages on BUS are not sent by MyHOMEServer1, therfore this gateway cannot be used to integrate the BTicino Alarm system
+**NOTE 2** Alarm messages on BUS are not sent by MyHOMEServer1, therefore this gateway cannot be used to integrate the BTicino Alarm system
 
 BUS Auxiliary commands (WHO=9) can be used to send on the BUS commands to control, for example, external devices or a BTicino Alarm system.
 
@@ -208,15 +211,17 @@ OPEN command to execute: *5*8#134##
 
 ### Lighting, Automation, Basic/CEN/CEN+ Scenario Events, Dry Contact / IR Interfaces, Power and Aux channels
 
-| Channel Type ID (channel ID)            | Applies to Thing Type IDs                                     | Item Type     | Description                                                                                                           | Read/Write  |
+| Channel Type ID (channel ID)            | Applies to Thing Type IDs                                     | Item Type     | Description                                                                                                                                                            | Read/Write  |
 |-----------------------------------------|---------------------------------------------------------------|---------------|-----------------------------------------------------------------------------------------------------------------------|:-----------:|
-| `switch` or `switch_01`/`02` for Zigbee | `bus_on_off_switch`, `zb_on_off_switch`, `zb_on_off_switch2u` | Switch        | To switch the device `ON` and `OFF`                                                                                   |     R/W     |
-| `brightness`                            | `bus_dimmer`, `zb_dimmer`                                     | Dimmer        | To adjust the brightness value (Percent, `ON`, `OFF`)                                                                 |     R/W     |
-| `shutter`                               | `bus_automation`                                              | Rollershutter | To activate roller shutters (`UP`, `DOWN`, `STOP`, Percent - [see Shutter position](#shutter-position))               |     R/W     |
-| `scenario`                              | `bus_scenario_control`                                        | String        | Trigger channel for Basic scenario events [see possible values](#scenario-channels)                                   | R (TRIGGER) |
-| `button#X`                              | `bus_cen_scenario_control`, `bus_cenplus_scenario_control`    | String        | Trigger channel for CEN/CEN+ scenario events [see possible values](#scenario-channels)                                | R (TRIGGER) |
-| `sensor`                                | `bus_dry_contact_ir`                                          | Switch        | Indicates if a Dry Contact Interface is `ON`/`OFF`, or if an IR Sensor is detecting movement (`ON`), or not  (`OFF`)  |      R      |
-| `power`                                 | `bus_energy_meter`                                            | Number:Power  | The current active power usage from Energy Meter                                                                      |      R      |
+| `switch` or `switch_01`/`02` for Zigbee | `bus_on_off_switch`, `zb_on_off_switch`, `zb_on_off_switch2u` | Switch        | To switch the device `ON` and `OFF`                                                                                                                                    |     R/W     |
+| `brightness`                            | `bus_dimmer`, `zb_dimmer`                                     | Dimmer        | To adjust the brightness value (Percent, `ON`, `OFF`)                                                                                                                  |     R/W     |
+| `shutter`                               | `bus_automation`                                              | Rollershutter | To activate roller shutters (`UP`, `DOWN`, `STOP`, Percent - [see Shutter position](#shutter-position))                                                                |     R/W     |
+| `scenario`                              | `bus_scenario_control`                                        | String        | Trigger channel for Basic scenario events [see possible values](#scenario-channels)                                                                                    | R (TRIGGER) |
+| `button#X`                              | `bus_cen_scenario_control`, `bus_cenplus_scenario_control`    | String        | Trigger channel for CEN/CEN+ scenario events [see possible values](#scenario-channels)                                                                                 | R (TRIGGER) |
+| `sensor`                                | `bus_dry_contact_ir`                                          | Switch        | Indicates if a Dry Contact Interface is `ON`/`OFF`, or if an IR Sensor is detecting movement (`ON`), or not  (`OFF`)                                                   |      R      |
+| `power`                                 | `bus_energy_meter`                                            | Number:Power  | The current active power usage from Energy Meter                                                                                                                       |      R      |
+| `energyToday`                           | `bus_energy_meter`                                            | Number:Energy | Current day energy totalizer                                                                                                                                           |      R      |
+| `energyThisMonth`                       | `bus_energy_meter`                                            | Number:Energy | Current month energy totalizer                                                                                                                                         |      R      |
 | `aux`                                   | `bus_aux`                                                     | String        | Possible commands: `ON`, `OFF`, `TOGGLE`, `STOP`, `UP`, `DOWN`, `ENABLED`, `DISABLED`, `RESET_GEN`, `RESET_BI`, `RESET_TRI`. Only `ON` and `OFF` are supported for now |     R/W     |
 
 ### Alarm channels
@@ -326,7 +331,7 @@ Bridge openwebnet:bus_gateway:mybridge "MyHOMEServer1" [ host="192.168.1.35", pa
       bus_energy_meter              CENTRAL_Ta           "Energy Meter Ta"          [ where="51" ]
       bus_energy_meter              CENTRAL_Tb           "Energy Meter Tb"          [ where="52" ]
 
-      bus_thermo_cu                 CU_3550              "99 zones central unit"    [ where="0" ]
+      bus_thermo_cu                 CU_3550              "99 zones Central Unit"    [ where="#0" ]
       bus_thermo_zone               LR_zone              "Living Room Zone"         [ where="2"]
       bus_thermo_sensor             EXT_tempsensor       "External Temperature"     [ where="500"]
 
@@ -357,7 +362,8 @@ Bridge openwebnet:zb_gateway:myZBgateway  [ serialPort="COM3" ] {
 
 Example items linked to BUS devices:
 
-NOTE: lights, blinds and zones (thermostat) can be handled from personal assistants (Google Home, Alexa). In the following example `Google Assistant` (`ga="..."`) and `HomeKit` (`homekit="..."`)  were configured according to the [Google official documentation](https://www.openhab.org/docs/ecosystem/google-assistant) and [HomeKit official documentation](https://www.openhab.org/addons/integrations/homekit/)
+NOTE: lights, blinds and zones (thermostat) can be handled from personal assistants (Google Home, Alexa).
+In the following example some `Google Assistant` (`ga="..."`) and `HomeKit` (`homekit="..."`) metadata were added as examples according to the [documentation for Google Assistant integration on openHAB](https://www.openhab.org/docs/ecosystem/google-assistant) and [the openHAB HomeKit Add-on documentation](https://www.openhab.org/addons/integrations/homekit/): see the specific openHAB documentation for updated configurations and more metadata options.
 
 ```java
 Switch              iLR_switch                  "Light"                       (gLivingRoom)     { channel="openwebnet:bus_on_off_switch:mybridge:LR_switch:switch", ga="Light", homekit="Lighting" }
@@ -367,6 +373,10 @@ Rollershutter       iLR_shutter                 "Shutter [%.0f %%]"           (g
 
 Number:Power        iCENTRAL_Ta                 "Power [%.0f %unit%]"                           { channel="openwebnet:bus_energy_meter:mybridge:CENTRAL_Ta:power" }
 Number:Power        iCENTRAL_Tb                 "Power [%.0f %unit%]"                           { channel="openwebnet:bus_energy_meter:mybridge:CENTRAL_Tb:power" }
+Number:Energy       iCENTRAL_Ta_day             "Energy Day [%.1f %unit%]"                      { channel="openwebnet:bus_energy_meter:mybridge:CENTRAL_Ta:energyToday"}
+Number:Energy       iCENTRAL_Tb_day             "Energy Day [%.1f %unit%]"                      { channel="openwebnet:bus_energy_meter:mybridge:CENTRAL_Tb:energyToday"}
+Number:Energy       iCENTRAL_Ta_month           "Energy Month [%.1f %unit%]"                    { channel="openwebnet:bus_energy_meter:mybridge:CENTRAL_Ta:energyThisMonth"}
+Number:Energy       iCENTRAL_Tb_month           "Energy Month [%.1f %unit%]"                    { channel="openwebnet:bus_energy_meter:mybridge:CENTRAL_Tb:energyThisMonth"}
 
 // 99 zones thermo central unit
 Group               gCentralUnit                "Thermo Central Unit"
@@ -433,8 +443,12 @@ sitemap openwebnet label="OpenWebNet Binding Example Sitemap"
 
     Frame label="Energy Meters" icon="energy"
     {
-          Default item=iCENTRAL_Ta label="General"      icon="energy" valuecolor=[>3000="red"]
-          Default item=iCENTRAL_Tb label="Ground Floor" icon="energy" valuecolor=[>3000="red"]
+          Default item=iCENTRAL_Ta      label="General"                        icon="energy" valuecolor=[>3000="red"]
+          Default item=iCENTRAL_Tb      label="Ground Floor"                   icon="energy" valuecolor=[>3000="red"]
+          Default item=CENTRAL_Ta_day   label="General Energy Today"           icon="energy" valuecolor=[>3000="blue"]
+          Default item=CENTRAL_Tb_day   label="Ground Floor Energy Today"      icon="energy" valuecolor=[>3000="blue"]
+          Default item=CENTRAL_Ta_month label="General Energy This Month"      icon="energy" valuecolor=[>3000="yellow"]
+          Default item=CENTRAL_Tb_month label="Ground Floor Energy This Month" icon="energy" valuecolor=[>3000="yellow"]
     }
 
     Frame label="Living Room Thermo"
@@ -457,7 +471,7 @@ sitemap openwebnet label="OpenWebNet Binding Example Sitemap"
     Frame label="Alarm"
     {
          Switch  item=iAlarm_System_State       label="Alarm state"
-         Switch  item=iAlarm_Control            label="Arm/Disarm alarm"   icon="shield"
+         Switch  item=iAlarm_Control            label="Arm/Disarm alarm"   icon="shield" mappings=[OFF="Disarmed",ON="Armed"]
          Switch  item=iAlarm_System_Armed       label="Armed"              icon="shield"
          Switch  item=iAlarm_System_Network     label="Network"            icon="network"
          Default item=iAlarm_System_Battery     label="Battery"            icon="battery"
@@ -512,7 +526,8 @@ end
 
 ## Notes
 
-The OpenWebNet protocol is maintained and Copyright by BTicino/Legrand. The documentation of the protocol if freely accessible for developers on the [Legrand developer web site](https://developer.legrand.com/documentation/open-web-net-for-myhome/)
+The OpenWebNet (Open Web Net) protocol is maintained and Copyright by BTicino/Legrand.
+The documentation of the protocol is freely accessible for developers on the [Legrand developer web site](https://developer.legrand.com/local-interoperability/)
 
 ## Special thanks
 
@@ -530,6 +545,7 @@ Special thanks for helping on testing this binding go to:
 [@rubenfuser](https://community.openhab.org/u/rubenfuser),
 [@stamate_viorel](https://community.openhab.org/u/stamate_viorel),
 [@marchino](https://community.openhab.org/u/marchino),
-[@the-ninth](https://community.openhab.org/u/the-ninth)
+[@the-ninth](https://community.openhab.org/u/the-ninth),
+[@giacob](https://community.openhab.org/u/giacob)
 
 and many others at the fantastic openHAB community!

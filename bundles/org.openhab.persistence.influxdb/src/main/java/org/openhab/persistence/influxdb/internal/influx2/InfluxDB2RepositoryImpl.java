@@ -27,6 +27,7 @@ import java.util.stream.Stream;
 
 import org.eclipse.jdt.annotation.NonNullByDefault;
 import org.eclipse.jdt.annotation.Nullable;
+import org.influxdb.InfluxDBIOException;
 import org.openhab.core.persistence.FilterCriteria;
 import org.openhab.persistence.influxdb.internal.FilterCriteriaQueryCreator;
 import org.openhab.persistence.influxdb.internal.InfluxDBConfiguration;
@@ -43,6 +44,7 @@ import com.influxdb.client.InfluxDBClientFactory;
 import com.influxdb.client.InfluxDBClientOptions;
 import com.influxdb.client.QueryApi;
 import com.influxdb.client.WriteApi;
+import com.influxdb.client.domain.HealthCheck;
 import com.influxdb.client.domain.Ready;
 import com.influxdb.client.domain.WritePrecision;
 import com.influxdb.client.write.Point;
@@ -75,7 +77,8 @@ public class InfluxDB2RepositoryImpl implements InfluxDBRepository {
 
     @Override
     public boolean isConnected() {
-        return client != null;
+        InfluxDBClient client = this.client;
+        return client != null && client.health().getStatus() == HealthCheck.StatusEnum.PASS;
     }
 
     @Override
@@ -138,7 +141,7 @@ public class InfluxDB2RepositoryImpl implements InfluxDBRepository {
             List<Point> clientPoints = influxPoints.stream().map(this::convertPointToClientFormat)
                     .filter(Optional::isPresent).map(Optional::get).toList();
             currentWriteAPI.writePoints(clientPoints);
-        } catch (InfluxException e) {
+        } catch (InfluxException | InfluxDBIOException e) {
             logger.debug("Writing to database failed", e);
             return false;
         }
@@ -173,7 +176,7 @@ public class InfluxDB2RepositoryImpl implements InfluxDBRepository {
         try {
             deleteAPI.delete(start, stop, predicate, configuration.getRetentionPolicy(),
                     configuration.getDatabaseName());
-        } catch (InfluxException e) {
+        } catch (InfluxException | InfluxDBIOException e) {
             logger.debug("Deleting from database failed", e);
             return false;
         }
@@ -185,12 +188,12 @@ public class InfluxDB2RepositoryImpl implements InfluxDBRepository {
         Point clientPoint = Point.measurement(point.getMeasurementName()).time(point.getTime(), WritePrecision.MS);
         @Nullable
         Object value = point.getValue();
-        if (value instanceof String) {
-            clientPoint.addField(FIELD_VALUE_NAME, (String) value);
-        } else if (value instanceof Number) {
-            clientPoint.addField(FIELD_VALUE_NAME, (Number) value);
-        } else if (value instanceof Boolean) {
-            clientPoint.addField(FIELD_VALUE_NAME, (Boolean) value);
+        if (value instanceof String string) {
+            clientPoint.addField(FIELD_VALUE_NAME, string);
+        } else if (value instanceof Number number) {
+            clientPoint.addField(FIELD_VALUE_NAME, number);
+        } else if (value instanceof Boolean boolean1) {
+            clientPoint.addField(FIELD_VALUE_NAME, boolean1);
         } else if (value == null) {
             clientPoint.addField(FIELD_VALUE_NAME, (String) null);
         } else {
@@ -203,14 +206,18 @@ public class InfluxDB2RepositoryImpl implements InfluxDBRepository {
 
     @Override
     public List<InfluxRow> query(FilterCriteria filter, String retentionPolicy) {
-        final QueryApi currentQueryAPI = queryAPI;
-        if (currentQueryAPI != null) {
-            String query = queryCreator.createQuery(filter, retentionPolicy);
-            logger.trace("Query {}", query);
-            List<FluxTable> clientResult = currentQueryAPI.query(query);
-            return clientResult.stream().flatMap(this::mapRawResultToHistoric).toList();
-        } else {
-            logger.warn("Returning empty list because queryAPI isn't present");
+        try {
+            final QueryApi currentQueryAPI = queryAPI;
+            if (currentQueryAPI != null) {
+                String query = queryCreator.createQuery(filter, retentionPolicy);
+                logger.trace("Query {}", query);
+                List<FluxTable> clientResult = currentQueryAPI.query(query);
+                return clientResult.stream().flatMap(this::mapRawResultToHistoric).toList();
+            } else {
+                throw new InfluxException("API not present");
+            }
+        } catch (InfluxException | InfluxDBIOException e) {
+            logger.warn("Failed to execute query '{}': {}", filter, e.getMessage());
             return List.of();
         }
     }

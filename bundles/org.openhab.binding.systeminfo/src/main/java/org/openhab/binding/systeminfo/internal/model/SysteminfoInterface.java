@@ -42,7 +42,7 @@ public interface SysteminfoInterface {
 
     // Operating system info
     /**
-     * Get the Family of the operating system /e.g. Windows,Unix,.../
+     * Get the Family of the operating system /e.g. Windows, Unix,.../
      */
     StringType getOsFamily();
 
@@ -457,7 +457,7 @@ public interface SysteminfoInterface {
      *
      * @param pid - the PID of the process
      * @return memory size
-     * @throws DeviceNotFoundException- thrown if process with this PID can not be found
+     * @throws DeviceNotFoundException thrown if process with this PID can not be found
      */
     @Nullable
     QuantityType<DataAmount> getProcessMemoryUsage(int pid) throws DeviceNotFoundException;
